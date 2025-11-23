@@ -1,0 +1,972 @@
+# Sources export for GPT
+# generated_at: 2025-11-23T16:22:04
+# roots: ./, ./src
+# patterns: *.java, *.yaml, *.yml, *.sql
+# excluded_dirs: .cache, .git, .hg, .idea, .mypy_cache, .svn, .terraform, .venv, .vscode, __pycache__, bazel-bin, bazel-out, bazel-testlogs, build, dist, env, node_modules, out, target, test, vendor, venv
+
+
+===== FILE: java/com/mvp/facilitapay/domain/model/Card.java =====
+# size: 1785 bytes
+```java
+package com.mvp.facilitapay.domain.model;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import java.time.LocalDateTime;
+import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@Entity
+@Table(name = "cards")
+public class Card {
+
+    @EqualsAndHashCode.Include
+    @Id
+    @GeneratedValue
+    @Column(nullable = false, updatable = false)
+    private UUID id;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @NotBlank
+    @Column(nullable = false)
+    private String brand;
+
+    @NotBlank
+    @Column(nullable = false)
+    private String last4;
+
+    @NotBlank
+    @Column(nullable = false)
+    private String token;
+
+    @NotBlank
+    @Column(nullable = false)
+    private String holderName;
+
+    @NotNull
+    @Column(nullable = false)
+    private Integer expMonth;
+
+    @NotNull
+    @Column(nullable = false)
+    private Integer expYear;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
+}
+
+
+```
+
+===== FILE: java/com/mvp/facilitapay/domain/model/Payment.java =====
+# size: 2719 bytes
+```java
+package com.mvp.facilitapay.domain.model;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@Entity
+@Table(name = "payments")
+public class Payment {
+
+    @EqualsAndHashCode.Include
+    @Id
+    @GeneratedValue
+    @Column(nullable = false, updatable = false)
+    private UUID id;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @NotNull
+    @Positive
+    @Column(nullable = false)
+    private Long amountCents;
+
+    @NotBlank
+    @Column(nullable = false)
+    private String currency;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ReceiverType receiverType;
+
+    @Lob
+    @Column(nullable = false)
+    private String receiverPayload;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PaymentStatus status;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    @Builder.Default
+    @OneToMany(
+            mappedBy = "payment",
+            cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+            orphanRemoval = false)
+    private List<PaymentSplit> splits = new ArrayList<>();
+
+    @OneToOne(mappedBy = "payment", fetch = FetchType.LAZY)
+    private Payout payout;
+
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        if (createdAt == null) {
+            createdAt = now;
+        }
+        updatedAt = now;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+}
+
+
+```
+
+===== FILE: java/com/mvp/facilitapay/domain/model/PaymentSplit.java =====
+# size: 2168 bytes
+```java
+package com.mvp.facilitapay.domain.model;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import java.time.LocalDateTime;
+import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@Entity
+@Table(name = "payment_splits")
+public class PaymentSplit {
+
+    @EqualsAndHashCode.Include
+    @Id
+    @GeneratedValue
+    @Column(nullable = false, updatable = false)
+    private UUID id;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payment_id", nullable = false)
+    private Payment payment;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "card_id", nullable = false)
+    private Card card;
+
+    @NotNull
+    @Positive
+    @Column(nullable = false)
+    private Long amountCents;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private SplitStatus status;
+
+    @Column(nullable = true)
+    private String externalAuthId;
+
+    @Column(nullable = true)
+    private String externalCaptureId;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        if (createdAt == null) {
+            createdAt = now;
+        }
+        updatedAt = now;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+}
+
+
+```
+
+===== FILE: java/com/mvp/facilitapay/domain/model/PaymentStatus.java =====
+# size: 155 bytes
+```java
+package com.mvp.facilitapay.domain.model;
+
+public enum PaymentStatus {
+    CREATED,
+    AUTHORIZING,
+    AUTHORIZED,
+    PAID,
+    FAILED,
+    CANCELED
+}
+
+
+```
+
+===== FILE: java/com/mvp/facilitapay/domain/model/Payout.java =====
+# size: 2089 bytes
+```java
+package com.mvp.facilitapay.domain.model;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import java.time.LocalDateTime;
+import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@Entity
+@Table(name = "payouts")
+public class Payout {
+
+    @EqualsAndHashCode.Include
+    @Id
+    @GeneratedValue
+    @Column(nullable = false, updatable = false)
+    private UUID id;
+
+    @NotNull
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payment_id", nullable = false, unique = true)
+    private Payment payment;
+
+    @NotBlank
+    @Column(nullable = false)
+    private String method;
+
+    @NotNull
+    @Positive
+    @Column(nullable = false)
+    private Long amountCents;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PayoutStatus status;
+
+    @Column(nullable = true)
+    private String externalId;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        if (createdAt == null) {
+            createdAt = now;
+        }
+        updatedAt = now;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+}
+
+
+```
+
+===== FILE: java/com/mvp/facilitapay/domain/model/PayoutStatus.java =====
+# size: 122 bytes
+```java
+package com.mvp.facilitapay.domain.model;
+
+public enum PayoutStatus {
+    PENDING,
+    SENT,
+    CONFIRMED,
+    FAILED
+}
+
+
+```
+
+===== FILE: java/com/mvp/facilitapay/domain/model/ReceiverType.java =====
+# size: 91 bytes
+```java
+package com.mvp.facilitapay.domain.model;
+
+public enum ReceiverType {
+    PIX,
+    LINK
+}
+
+
+```
+
+===== FILE: java/com/mvp/facilitapay/domain/model/SplitStatus.java =====
+# size: 140 bytes
+```java
+package com.mvp.facilitapay.domain.model;
+
+public enum SplitStatus {
+    PENDING,
+    AUTHORIZED,
+    CAPTURED,
+    FAILED,
+    CANCELED
+}
+
+
+```
+
+===== FILE: java/com/mvp/facilitapay/domain/model/User.java =====
+# size: 1334 bytes
+```java
+package com.mvp.facilitapay.domain.model;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import java.time.LocalDateTime;
+import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@Entity
+@Table(name = "users")
+public class User {
+
+    @EqualsAndHashCode.Include
+    @Id
+    @GeneratedValue
+    @Column(nullable = false, updatable = false)
+    private UUID id;
+
+    @NotBlank
+    @Column(nullable = false)
+    private String name;
+
+    @Email
+    @NotBlank
+    @Column(nullable = false)
+    private String email;
+
+    @NotBlank
+    @Column(nullable = false)
+    private String passwordHash;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
+}
+
+
+```
+
+===== FILE: java/com/mvp/facilitapay/FacilitapayApplication.java =====
+# size: 322 bytes
+```java
+package com.mvp.facilitapay;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class FacilitapayApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(FacilitapayApplication.class, args);
+	}
+
+}
+
+```
+
+===== FILE: java/com/mvp/facilitapay/infra/db/BaseRepository.java =====
+# size: 954 bytes
+```java
+package com.mvp.facilitapay.infra.db;
+
+import java.util.List;
+import java.util.Optional;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+public class BaseRepository {
+
+    protected final JdbcTemplate jdbcTemplate;
+
+    public BaseRepository(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    protected <T> Optional<T> findOne(String sql, Object[] params, Class<T> clazz) {
+        List<T> result = findAll(sql, params, clazz);
+        return result.stream().findFirst();
+    }
+
+    protected <T> List<T> findAll(String sql, Object[] params, Class<T> clazz) {
+        Object[] safeParams = params != null ? params : new Object[0];
+        return jdbcTemplate.query(sql, safeParams, new ReflectionRowMapper<>(clazz));
+    }
+
+    protected int executeUpdate(String sql, Object[] params) {
+        Object[] safeParams = params != null ? params : new Object[0];
+        return jdbcTemplate.update(sql, safeParams);
+    }
+}
+
+```
+
+===== FILE: java/com/mvp/facilitapay/infra/db/ReflectionRowMapper.java =====
+# size: 6929 bytes
+```java
+package com.mvp.facilitapay.infra.db;
+
+import jakarta.persistence.Column;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
+import org.springframework.jdbc.core.RowMapper;
+
+public class ReflectionRowMapper<T> implements RowMapper<T> {
+
+    private final Class<T> type;
+
+    public ReflectionRowMapper(Class<T> type) {
+        this.type = type;
+    }
+
+    @Override
+    public T mapRow(ResultSet rs, int rowNum) throws SQLException {
+        Map<String, Integer> camelIndex = new HashMap<>();
+        Map<String, Integer> rawIndex = new HashMap<>();
+
+        ResultSetMetaData metaData = rs.getMetaData();
+        int columnCount = metaData.getColumnCount();
+        for (int i = 1; i <= columnCount; i++) {
+            String label = metaData.getColumnLabel(i);
+            if (label == null || label.isBlank()) {
+                label = metaData.getColumnName(i);
+            }
+            String camel = toCamel(label);
+            camelIndex.put(camel.toLowerCase(Locale.ROOT), i);
+            rawIndex.put(label.toLowerCase(Locale.ROOT), i);
+        }
+
+        try {
+            Constructor<T> constructor = type.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            T instance = constructor.newInstance();
+
+            for (Field field : getAllFields(type)) {
+                field.setAccessible(true);
+                Integer columnIndex = resolveColumnIndex(field, camelIndex, rawIndex);
+                if (columnIndex == null) {
+                    continue;
+                }
+                Object columnValue = rs.getObject(columnIndex);
+                if (columnValue == null) {
+                    if (!field.getType().isPrimitive()) {
+                        field.set(instance, null);
+                    }
+                    continue;
+                }
+                Object converted = convertValue(columnValue, field.getType());
+                if (converted != null || !field.getType().isPrimitive()) {
+                    field.set(instance, converted);
+                }
+            }
+
+            return instance;
+        } catch (Exception e) {
+            throw new SQLException("Failed to map row to " + type.getSimpleName(), e);
+        }
+    }
+
+    private Integer resolveColumnIndex(Field field, Map<String, Integer> camelIndex, Map<String, Integer> rawIndex) {
+        Column column = field.getAnnotation(Column.class);
+        List<String> candidates = new ArrayList<>();
+
+        if (column != null && column.name() != null && !column.name().isBlank()) {
+            String name = column.name();
+            candidates.add(name.toLowerCase(Locale.ROOT));
+            candidates.add(toCamel(name).toLowerCase(Locale.ROOT));
+        }
+
+        String fieldName = field.getName();
+        candidates.add(fieldName.toLowerCase(Locale.ROOT));
+        candidates.add(toCamel(fieldName).toLowerCase(Locale.ROOT));
+
+        for (String candidate : candidates) {
+            if (camelIndex.containsKey(candidate)) {
+                return camelIndex.get(candidate);
+            }
+            if (rawIndex.containsKey(candidate)) {
+                return rawIndex.get(candidate);
+            }
+        }
+
+        return null;
+    }
+
+    private List<Field> getAllFields(Class<?> clazz) {
+        List<Field> fields = new ArrayList<>();
+        Class<?> current = clazz;
+        while (current != null && current != Object.class) {
+            Field[] declared = current.getDeclaredFields();
+            for (Field field : declared) {
+                fields.add(field);
+            }
+            current = current.getSuperclass();
+        }
+        return fields;
+    }
+
+    private Object convertValue(Object value, Class<?> targetType) {
+        if (targetType.isAssignableFrom(value.getClass())) {
+            return value;
+        }
+
+        if (targetType == String.class) {
+            return value.toString();
+        }
+        if (targetType == UUID.class) {
+            return UUID.fromString(value.toString());
+        }
+        if (targetType == Instant.class) {
+            if (value instanceof Timestamp timestamp) {
+                return timestamp.toInstant();
+            }
+            return Instant.parse(value.toString());
+        }
+        if (targetType == LocalDateTime.class && value instanceof Timestamp timestamp) {
+            return timestamp.toLocalDateTime();
+        }
+        if (targetType == BigDecimal.class) {
+            if (value instanceof BigDecimal bigDecimal) {
+                return bigDecimal;
+            }
+            return new BigDecimal(value.toString());
+        }
+        if (targetType.isEnum()) {
+            @SuppressWarnings({"unchecked", "rawtypes"})
+            Class<Enum> enumType = (Class<Enum>) targetType;
+            return Enum.valueOf(enumType, value.toString());
+        }
+
+        if (Number.class.isAssignableFrom(targetType) || targetType.isPrimitive()) {
+            return convertNumber(value, targetType);
+        }
+
+        return null;
+    }
+
+    private Object convertNumber(Object value, Class<?> targetType) {
+        if (!(value instanceof Number number)) {
+            return null;
+        }
+        if (targetType == Integer.class || targetType == int.class) {
+            return number.intValue();
+        }
+        if (targetType == Long.class || targetType == long.class) {
+            return number.longValue();
+        }
+        if (targetType == Double.class || targetType == double.class) {
+            return number.doubleValue();
+        }
+        if (targetType == Float.class || targetType == float.class) {
+            return number.floatValue();
+        }
+        if (targetType == Short.class || targetType == short.class) {
+            return number.shortValue();
+        }
+        if (targetType == Byte.class || targetType == byte.class) {
+            return number.byteValue();
+        }
+        if (targetType == Boolean.class || targetType == boolean.class) {
+            return number.intValue() != 0;
+        }
+        return null;
+    }
+
+    private String toCamel(String name) {
+        StringBuilder builder = new StringBuilder();
+        boolean nextUpper = false;
+        for (char ch : name.toCharArray()) {
+            if (ch == '_' || ch == ' ') {
+                nextUpper = true;
+                continue;
+            }
+            if (nextUpper) {
+                builder.append(Character.toUpperCase(ch));
+                nextUpper = false;
+            } else {
+                builder.append(Character.toLowerCase(ch));
+            }
+        }
+        return builder.toString();
+    }
+}
+
+
+```
+
+===== FILE: java/com/mvp/facilitapay/infra/repo/CardRepository.java =====
+# size: 310 bytes
+```java
+package com.mvp.facilitapay.infra.repo;
+
+import com.mvp.facilitapay.domain.model.Card;
+import java.util.List;
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface CardRepository extends JpaRepository<Card, UUID> {
+
+    List<Card> findByUserId(UUID userId);
+}
+
+
+```
+
+===== FILE: java/com/mvp/facilitapay/infra/repo/PaymentRepository.java =====
+# size: 322 bytes
+```java
+package com.mvp.facilitapay.infra.repo;
+
+import com.mvp.facilitapay.domain.model.Payment;
+import java.util.List;
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface PaymentRepository extends JpaRepository<Payment, UUID> {
+
+    List<Payment> findByUserId(UUID userId);
+}
+
+
+```
+
+===== FILE: java/com/mvp/facilitapay/infra/repo/PaymentSplitRepository.java =====
+# size: 407 bytes
+```java
+package com.mvp.facilitapay.infra.repo;
+
+import com.mvp.facilitapay.domain.model.PaymentSplit;
+import java.util.List;
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface PaymentSplitRepository extends JpaRepository<PaymentSplit, UUID> {
+
+    List<PaymentSplit> findByPaymentId(UUID paymentId);
+
+    List<PaymentSplit> findByPayment_UserId(UUID userId);
+}
+
+
+```
+
+===== FILE: java/com/mvp/facilitapay/infra/repo/PayoutRepository.java =====
+# size: 389 bytes
+```java
+package com.mvp.facilitapay.infra.repo;
+
+import com.mvp.facilitapay.domain.model.Payout;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface PayoutRepository extends JpaRepository<Payout, UUID> {
+
+    Optional<Payout> findByPaymentId(UUID paymentId);
+
+    Optional<Payout> findByPayment_UserId(UUID userId);
+}
+
+
+```
+
+===== FILE: java/com/mvp/facilitapay/infra/repo/UserRepository.java =====
+# size: 318 bytes
+```java
+package com.mvp.facilitapay.infra.repo;
+
+import com.mvp.facilitapay.domain.model.User;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface UserRepository extends JpaRepository<User, UUID> {
+
+    Optional<User> findByEmail(String email);
+}
+
+
+```
+
+===== FILE: resources/application-dev.yml =====
+# size: 253 bytes
+```yaml
+spring:
+  datasource:
+    url: jdbc:h2:mem:fp;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+  h2.console.enabled: true
+  jpa:
+    hibernate.ddl-auto: validate
+    properties:
+      hibernate.format_sql: true
+flyway.enabled: true
+
+```
+
+===== FILE: resources/application-prod.yml =====
+# size: 179 bytes
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://HOST:5432/facilitapay
+    username: postgres
+    password: surfamily
+  jpa:
+    hibernate.ddl-auto: validate
+flyway.enabled: true
+
+```
+
+===== FILE: resources/application.yml =====
+# size: 58 bytes
+```yaml
+spring:
+  profiles:
+    default: dev
+server:
+  port: 8080
+
+```
+
+===== FILE: resources/db/migration/V1__init.sql =====
+# size: 1749 bytes
+```sql
+create table users (
+  id uuid primary key,
+  name varchar(120) not null,
+  email varchar(160) not null unique,
+  password_hash varchar(255) not null,
+  created_at timestamp not null default now()
+);
+
+create table cards (
+  id uuid primary key,
+  user_id uuid not null references users(id),
+  brand varchar(30),
+  last4 varchar(4),
+  token varchar(200) not null,
+  holder_name varchar(120),
+  exp_month int,
+  exp_year int,
+  created_at timestamp not null default now()
+);
+
+create table payments (
+  id uuid primary key,
+  user_id uuid not null references users(id),
+  amount_cents bigint not null,
+  currency varchar(10) not null default 'BRL',
+  receiver_type varchar(10) not null, -- PIX | LINK
+  receiver_payload jsonb,
+  status varchar(20) not null,        -- CREATED | AUTHORIZING | AUTHORIZED | PAID | FAILED | CANCELED
+  created_at timestamp not null default now(),
+  updated_at timestamp not null default now()
+);
+
+create table payment_splits (
+  id uuid primary key,
+  payment_id uuid not null references payments(id),
+  card_id uuid not null references cards(id),
+  amount_cents bigint not null,
+  status varchar(20) not null,        -- PENDING | AUTHORIZED | CAPTURED | FAILED | CANCELED
+  external_auth_id varchar(100),
+  external_capture_id varchar(100),
+  created_at timestamp not null default now(),
+  updated_at timestamp not null default now()
+);
+
+create table payouts (
+  id uuid primary key,
+  payment_id uuid not null references payments(id),
+  method varchar(10) not null,        -- PIX | LINK
+  amount_cents bigint not null,
+  status varchar(20) not null,        -- PENDING | SENT | CONFIRMED | FAILED
+  external_id varchar(100),
+  created_at timestamp not null default now(),
+  updated_at timestamp not null default now()
+);
+
+```
+
+# total_files: 21

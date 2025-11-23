@@ -12,11 +12,7 @@ Plataforma que permite ao usuário somar limites de vários cartões para realiz
 
 ---
 
-<<<<<<< HEAD
 ## Escopo do MVP
-=======
-## Escopo do MVP 
->>>>>>> 9e9eee094729c966d62aaaa8bbdf589cbdae1219
 
 * Recebedor sempre à vista (Pix dinâmico ou link one-shot do gateway).
 * Usuário paga à vista em cada cartão, mas fracionado entre N cartões (sem juros via plataforma).

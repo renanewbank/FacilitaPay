@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://HOST:5432/facilitapay
+    username: postgres
+    password: surfamily
+  jpa:
+    hibernate.ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: UTC
+flyway.enabled: true
