@@ -12,7 +12,11 @@ Plataforma que permite ao usuário somar limites de vários cartões para realiz
 
 ---
 
+<<<<<<< HEAD
 ## Escopo do MVP
+=======
+## Escopo do MVP 
+>>>>>>> 9e9eee094729c966d62aaaa8bbdf589cbdae1219
 
 * Recebedor sempre à vista (Pix dinâmico ou link one-shot do gateway).
 * Usuário paga à vista em cada cartão, mas fracionado entre N cartões (sem juros via plataforma).
@@ -36,12 +40,12 @@ Plataforma que permite ao usuário somar limites de vários cartões para realiz
 * Acompanhamento do status da operação (linha do tempo).
 * Cancelamento automático e transparente em caso de falhas parciais.
 
-### Para o recebedor 
+### Para o recebedor (via plataforma)
 
 * Recebimento à vista por Pix dinâmico ou link do gateway.
 * Comprovante simples da operação.
 
-### Para o administrador
+### Para o administrador (mínimo)
 
 * Consulta de intents, filtros por status, auditoria de eventos e métricas iniciais.
 
@@ -169,6 +173,23 @@ Estados principais:
 
 ---
 
+## Integração externa (gateway)
+
+Interface única para abstrair o provedor:
+
+* authorize(cardToken, amount, currency)
+* capture(authId)
+* voidAuth(authId)
+* createPixDynamic(amount, currency, metadata)
+* createOneShotLink(amount, currency)
+
+Implementações:
+
+* Mock (MVP) com regras simples de aprovação/recusa e artefatos fake (QR/link).
+* Real (futuro), plugável sem alterar regras de negócio.
+
+---
+
 ## Frontend
 
 * Thymeleaf (SSR) para:
@@ -181,14 +202,42 @@ Estados principais:
 
 ---
 
-## Estrutura sugerida
+## Não objetivos do MVP
+
+* Parcelamento para o recebedor
+* Gestão de juros/antecipação para lojistas
+* Emissão própria de cartões/arranjo emissor
+* Catálogo de lojas/marketplace
+
+---
+
+## Roadmap (evolução)
+
+* Modelo B (se houver demanda): permitir parcelado do emissor para o usuário, mantendo recebedor à vista por parceiros que suportem a modalidade.
+* Antifraude/KYC mais robustos, limites dinâmicos por perfil.
+* Relatórios/admin avançados.
+* Novas saídas (boletos, Pix cobrança com vencimento) e melhores conciliações.
+
+---
+
+## Stack
+
+* Java 17+, Spring Boot, Spring Web, Spring Data JPA, Spring Security, Validation
+* Banco relacional: PostgreSQL (prod), H2 (dev/test)
+* Template engine: Thymeleaf (ou SPA leve)
+* Migrações: Flyway ou Liquibase
+* Testes: JUnit, MockMvc
+
+---
+
+## Estrutura inicial
 
 ```
 facilitapay/
  ├─ src/main/java/.../api/          # Controllers (MVC) + DTOs
  ├─ src/main/java/.../domain/       # Models (JPA) + Services (regras)
  ├─ src/main/java/.../infra/        # Repositories, Config, Security, Migrations
- ├─ src/main/java/.../adapters/     # PaymentGatewayClient (mock)
+ ├─ src/main/java/.../adapters/     # PaymentGatewayClient (mock/real)
  ├─ src/main/resources/templates/   # Thymeleaf views
  ├─ src/main/resources/static/      # CSS/JS/imagens
  └─ src/test/java/...               # Testes
